@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFP Ad Tag Parser</title>
+
+    <link rel="icon" type="image/jpeg" href="url-vector-icon.jpg">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: auto;
+            margin: 0 10%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 100px;
+            resize: both;
+            overflow: auto;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .button-group button,
+        .button-group select {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button-group .copy-btn {
+            background-color: #007bff;
+            color: white;
+            flex: 1;
+        }
+        .button-group .copy-btn.copied {
+            background-color: #28a745;
+        }
+        .parse-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .clear-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        select {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+        select:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            display: table;
+        }
+        td, th {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .key {
+            width: 10%;
+        }
+        .nested-key {
+            width: 10%;
+        }
+        .value {
+            line-break: anywhere;
+            width: 60%;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            font-size: 16px;
+        }
+
+        /* Style for JSON output */
+        .json-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .json-key {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .json-value {
+            color: #000;
+        }
+        .json-nested-key {
+            color: #ff5733;  /* Nested key color */
+            font-weight: bold;
+        }
+        .json-nested-value {
+            color: #555;  /* Nested value color */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DFP Ad Tag Parser</h1>
+        <textarea id="adTagInput" placeholder="Paste your DFP ad tag URL, query parameters, or network request payload..."></textarea>
+        
+        <div class="button-group">
+            <button class="parse-btn" onclick="parseAdTag()">Parse URL</button>
+            <button class="clear-btn" onclick="clearFields()">Clear</button>
+            <!-- Copy Parsed Data Button (hidden until parse is clicked) -->
+            <button class="copy-btn" id="copyParsedDataBtn" onclick="copyParsedData()" style="display: none;">Copy Parsed Data</button>
+        </div>
+
+        <!-- Format selection radio buttons, visible on page load -->
+        <div id="formatSelection" style="margin-top: 20px;">
+            <label>
+                <input type="radio" name="format" id="tableFormat" value="table" checked onclick="onFormatChange()"> Table Format
+            </label>
+            <label>
+                <input type="radio" name="format" id="jsonFormat" value="json" onclick="onFormatChange()"> JSON Format
+            </label>
+        </div>
+
+        <div id="parsedDataContainer" style="display: none;">
+            <!-- Table will be displayed here -->
+            <table id="adTagTable">
+                <tbody>
+                </tbody>
+            </table>
+
+            <!-- JSON will be displayed here inside a container -->
+            <div class="json-container" id="jsonContainer">
+                <pre id="jsonOutput" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">Result copied successfully!</div>
+
+    <script>
+        let parsedData = {};
+
+        function parseAdTag() {
+            const input = document.getElementById('adTagInput').value;
+            const tableBody = document.getElementById('adTagTable').querySelector('tbody');
+            const jsonOutput = document.getElementById('jsonOutput');
+            const jsonContainer = document.getElementById('jsonContainer');
+            tableBody.innerHTML = '';
+            jsonOutput.innerHTML = '';
+
+            if (!input) {
+                alert('Please enter a DFP Ad Tag URL or query parameters.');
+                return;
+            }
+
+            const [baseUrl, queryString] = input.split('?');
+            const uriStubRow = document.createElement('tr');
+            uriStubRow.innerHTML = `<td class="key">URI-STUB</td><td class="value" colspan=2>${baseUrl}</td>`;
+            tableBody.appendChild(uriStubRow);
+
+            parsedData = { uriStub: baseUrl, params: {} };
+
+            if (!queryString) return;
+
+            const params = new URLSearchParams(queryString);
+            params.forEach((value, key) => {
+                if (key === 'prev_scp' || key === 'cust_params') {
+                    try {
+                        const nestedParams = new URLSearchParams(value);
+                        nestedParams.forEach((nestedValue, nestedKey) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `<td class="key">${key}</td><td class="nested-key">${nestedKey}</td><td class="value">${nestedValue}</td>`;
+                            tableBody.appendChild(row);
+                        });
+                        parsedData.params[key] = Object.fromEntries(nestedParams);
+                    } catch (e) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td class="key">${key}</td><td class="nested-key"></td><td class="value">${value}</td>`;
+                        tableBody.appendChild(row);
+                        parsedData.params[key] = value;
+                    }
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td class="key">${key}</td><td class="value" colspan=2>${value}</td>`;
+                    tableBody.appendChild(row);
+                    parsedData.params[key] = value;
+                }
+            });
+
+            // Display the parsed data based on the selected format
+            const selectedFormat = document.querySelector('input[name="format"]:checked').value;
+            if (selectedFormat === 'table') {
+                // Display the table format
+                document.getElementById('adTagTable').style.display = 'table';
+                document.getElementById('jsonContainer').style.display = 'none';  // Hide JSON container
+            } else if (selectedFormat === 'json') {
+                // Display the JSON format inside the container
+                document.getElementById('adTagTable').style.display = 'none';  // Hide table
+                document.getElementById('jsonContainer').style.display = 'block'; // Show JSON container
+                jsonOutput.innerHTML = formatJSON(parsedData);
+            }
+
+            // Show the "Copy Parsed Data" button after parsing
+            document.getElementById('copyParsedDataBtn').style.display = 'inline-block';
+            document.getElementById('parsedDataContainer').style.display = 'block';
+        }
+
+        function clearFields() {
+            document.getElementById('adTagInput').value = '';
+            document.getElementById('adTagTable').querySelector('tbody').innerHTML = '';
+            document.getElementById('jsonOutput').innerHTML = '';
+            document.getElementById('adTagTable').style.display = 'none'; // Hide table
+            document.getElementById('jsonContainer').style.display = 'none'; // Hide JSON container
+            document.getElementById('copyParsedDataBtn').style.display = 'none'; // Hide copy button
+            document.getElementById('notification').style.display = 'none'; // Hide notification
+            document.getElementById('parsedDataContainer').style.display = 'none';
+        }
+
+        function onFormatChange() {
+            // Clear the displayed result and hide the copy button when format is changed
+            document.getElementById('adTagTable').querySelector('tbody').innerHTML = '';
+            document.getElementById('jsonOutput').innerHTML = '';
+            document.getElementById('copyParsedDataBtn').style.display = 'none';
+            document.getElementById('parsedDataContainer').style.display = 'none';
+        }
+
+        function copyParsedData() {
+            const selectedFormat = document.querySelector('input[name="format"]:checked').value;
+
+            if (selectedFormat === 'table') {
+                // Copy Table Result
+                const table = document.getElementById('adTagTable');
+                const range = document.createRange();
+                range.selectNode(table);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+
+                try {
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                    showNotification();
+                } catch (err) {
+                    alert('Failed to copy the result.');
+                }
+            } else if (selectedFormat === 'json') {
+                // Copy JSON Result
+                const jsonStr = JSON.stringify(parsedData, null, 2);
+                navigator.clipboard.writeText(jsonStr)
+                    .then(() => {
+                        showNotification();
+                    })
+                    .catch(err => {
+                        alert('Failed to copy JSON result.');
+                    });
+            }
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        function formatJSON(data) {
+            // Format JSON string with color-coded keys and values
+            const jsonString = JSON.stringify(data, null, 2);
+            return jsonString.replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                              .replace(/:\s"([^"]+)"/g, ': <span class="json-value">"$1"</span>')
+                              .replace(/:\s(\{)/g, ': <span class="json-nested-value">$1</span>')
+                              .replace(/"([^"]+)":\s\{/g, '"<span class="json-nested-key">$1</span>": {');
+        }
+    </script>
+</body>
+</html>
