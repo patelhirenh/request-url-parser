@@ -236,8 +236,17 @@
     <script>
       let parsedData = {};
 
+      function isValidURL(url) {
+        try {
+          new URL(url);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
       function parseAdTag() {
-        const input = document.getElementById("adTagInput").value;
+        const input = document.getElementById("adTagInput").value.trim();
         const tableBody = document
           .getElementById("adTagTable")
           .querySelector("tbody");
@@ -248,6 +257,13 @@
 
         if (!input) {
           alert("Please enter a Request URL or query parameters.");
+          return;
+        }
+
+        if (!isValidURL(input)) {
+          alert(
+            "The entered Request URL is not in a valid format. Please enter a correct URL."
+          );
           return;
         }
 
