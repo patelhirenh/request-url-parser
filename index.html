@@ -1,317 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Request URL Parser</title>
-  <link rel="icon" type="image/jpeg" href="url-vector-icon.jpg"/>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Request URL Parser</title>
+    <link rel="icon" type="image/jpeg" href="url-vector-icon.jpg" />
 
-  <style>
-    body {
-      font-family: 'Courier New', Courier, monospace;
-      margin: 20px;
-      background-color: #f8f9fa;
-    }
-    .container {
-      max-width: auto;
-      margin: 0 10%;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    textarea {
-      width: calc(100% - 22px);
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      height: 100px;
-      resize: both;
-      overflow: auto;
-    }
-    .button-group {
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-    .button-group button,
-    .button-group select {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .button-group .copy-btn {
-      background-color: #007bff;
-      color: white;
-      flex: 1;
-    }
-    .button-group .copy-btn.copied {
-      background-color: #28a745;
-    }
-    .parse-btn {
-      background-color: #28a745;
-      color: white;
-    }
-    .clear-btn {
-      background-color: #dc3545;
-      color: white;
-    }
-    select {
-      background-color: #007bff;
-      color: white;
-      border: none;
-    }
-    select:disabled {
-      background-color: #ddd;
-      cursor: not-allowed;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      display: table;
-    }
-    td, th {
-      padding: 5px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-    .key {
-      width: 10%;
-    }
-    .nested-key {
-      width: 10%;
-    }
-    .value {
-      line-break: anywhere;
-      width: 60%;
-    }
-    .highlight {
-      background-color: #ffcccc !important;
-      color: #a70000 !important;
-      font-weight: bold;
-    }
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #28a745;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      display: none;
-      font-size: 16px;
-    }
-    .json-container {
-      margin-top: 20px;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      display: none;
-    }
-    .json-key {
-      color: #007bff;
-      font-weight: bold;
-    }
-    .json-value {
-      color: #000;
-    }
-    .json-nested-key {
-      color: #ff5733;
-      font-weight: bold;
-    }
-    .json-nested-value {
-      color: #555;
-    }
-    .json-empty {
-      color: #a70000;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Request URL Parser</h1>
-    <textarea id="adTagInput" placeholder="Paste your Request URL, query parameters, or network request payload..."></textarea>
-    
-    <div class="button-group">
-      <button class="parse-btn" onclick="parseAdTag()">Parse URL</button>
-      <button class="clear-btn" onclick="clearFields()">Clear</button>
-      <button class="copy-btn" id="copyParsedDataBtn" onclick="copyParsedData()" style="display: none;">Copy Parsed Data</button>
-    </div>
+    <style>
+      body {
+        font-family: "Courier New", Courier, monospace;
+        margin: 20px;
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: auto;
+        margin: 0 10%;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      textarea {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        height: 100px;
+        resize: both;
+        overflow: auto;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+      .button-group button,
+      .button-group select {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .button-group .copy-btn {
+        background-color: #007bff;
+        color: white;
+        flex: 1;
+      }
+      .button-group .copy-btn.copied {
+        background-color: #28a745;
+      }
+      .parse-btn {
+        background-color: #28a745;
+        color: white;
+      }
+      .clear-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+      select {
+        background-color: #007bff;
+        color: white;
+        border: none;
+      }
+      select:disabled {
+        background-color: #ddd;
+        cursor: not-allowed;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        display: table;
+      }
+      td,
+      th {
+        padding: 5px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      .key {
+        width: 10%;
+      }
+      .nested-key {
+        width: 10%;
+      }
+      .value {
+        line-break: anywhere;
+        width: 60%;
+      }
+      .highlight {
+        background-color: #ffcccc !important;
+        color: #a70000 !important;
+        font-weight: bold;
+      }
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        display: none;
+        font-size: 16px;
+      }
+      .json-container {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+      .json-key {
+        color: #007bff;
+        font-weight: bold;
+      }
+      .json-value {
+        color: #000;
+      }
+      .json-nested-key {
+        color: #ff5733;
+        font-weight: bold;
+      }
+      .json-nested-value {
+        color: #555;
+      }
+      .json-empty {
+        color: #a70000;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Request URL Parser</h1>
+      <label for="adTagInput"
+        >Enter your Request URL or query parameters:</label
+      >
+      <textarea
+        id="adTagInput"
+        placeholder="Paste your Request URL, query parameters, or network request payload..."
+        aria-describedby="adTagInputHelp"
+      ></textarea>
+      <p id="adTagInputHelp">
+        Example: https://example.com?param1=value1&param2=value2
+      </p>
 
-    <div id="formatSelection" style="margin-top: 20px;">
-      <label>
-        <input type="radio" name="format" id="tableFormat" value="table" checked onclick="onFormatChange()"> Table Format
-      </label>
-      <label>
-        <input type="radio" name="format" id="jsonFormat" value="json" onclick="onFormatChange()"> JSON Format
-      </label>
-    </div>
+      <div class="button-group">
+        <button
+          class="parse-btn"
+          onclick="parseAdTag()"
+          aria-label="Parse the entered URL"
+        >
+          Parse URL
+        </button>
+        <button
+          class="clear-btn"
+          onclick="clearFields()"
+          aria-label="Clear all input and output fields"
+        >
+          Clear
+        </button>
+        <button
+          class="copy-btn"
+          id="copyParsedDataBtn"
+          onclick="copyParsedData()"
+          style="display: none"
+          aria-label="Copy the parsed data"
+        >
+          Copy Parsed Data
+        </button>
+      </div>
 
-    <div id="parsedDataContainer" style="display: none;">
-      <table id="adTagTable">
-        <tbody></tbody>
-      </table>
-      <div class="json-container" id="jsonContainer">
-        <pre id="jsonOutput" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+      <fieldset id="formatSelection" style="margin-top: 20px">
+        <legend>Select Output Format</legend>
+        <label>
+          <input
+            type="radio"
+            name="format"
+            id="tableFormat"
+            value="table"
+            checked
+            onclick="onFormatChange()"
+            aria-label="Display parsed data in table format"
+          />
+          Table Format
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="format"
+            id="jsonFormat"
+            value="json"
+            onclick="onFormatChange()"
+            aria-label="Display parsed data in JSON format"
+          />
+          JSON Format
+        </label>
+      </fieldset>
+
+      <div id="parsedDataContainer" style="display: none">
+        <table id="adTagTable" aria-label="Parsed URL data in table format">
+          <tbody></tbody>
+        </table>
+        <div class="json-container" id="jsonContainer">
+          <pre
+            id="jsonOutput"
+            style="white-space: pre-wrap; word-wrap: break-word"
+            aria-label="Parsed URL data in JSON format"
+          ></pre>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="notification" class="notification">Result copied successfully!</div>
+    <div id="notification" class="notification" role="alert" aria-live="polite">
+      Result copied successfully!
+    </div>
 
-  <script>
-    let parsedData = {};
+    <script>
+      let parsedData = {};
 
-    function parseAdTag() {
-      const input = document.getElementById('adTagInput').value;
-      const tableBody = document.getElementById('adTagTable').querySelector('tbody');
-      const jsonOutput = document.getElementById('jsonOutput');
-      const jsonContainer = document.getElementById('jsonContainer');
-      tableBody.innerHTML = '';
-      jsonOutput.innerHTML = '';
+      function parseAdTag() {
+        const input = document.getElementById("adTagInput").value;
+        const tableBody = document
+          .getElementById("adTagTable")
+          .querySelector("tbody");
+        const jsonOutput = document.getElementById("jsonOutput");
+        const jsonContainer = document.getElementById("jsonContainer");
+        tableBody.innerHTML = "";
+        jsonOutput.innerHTML = "";
 
-      if (!input) {
-        alert('Please enter a Request URL or query parameters.');
-        return;
-      }
+        if (!input) {
+          alert("Please enter a Request URL or query parameters.");
+          return;
+        }
 
-      const [baseUrl, queryString] = input.split('?');
-      const uriStubRow = document.createElement('tr');
-      uriStubRow.innerHTML = `<td class="key">URI-STUB</td><td class="value" colspan=2>${baseUrl}</td>`;
-      tableBody.appendChild(uriStubRow);
+        const [baseUrl, queryString] = input.split("?");
+        const uriStubRow = document.createElement("tr");
+        uriStubRow.innerHTML = `<td class="key">URI-STUB</td><td class="value" colspan=2>${baseUrl}</td>`;
+        tableBody.appendChild(uriStubRow);
 
-      parsedData = { uriStub: baseUrl, params: {} };
+        parsedData = { uriStub: baseUrl, params: {} };
 
-      if (!queryString) return;
+        if (!queryString) return;
 
-      const params = new URLSearchParams(queryString);
-      params.forEach((value, key) => {
-        if (key === 'prev_scp' || key === 'cust_params') {
-          try {
-            const nestedParams = new URLSearchParams(value);
-            const nestedObj = {};
-            nestedParams.forEach((nestedValue, nestedKey) => {
-              const isEmpty = !nestedValue;
-              const row = document.createElement('tr');
-              row.innerHTML = `<td class="key">${key}</td>
+        const params = new URLSearchParams(queryString);
+        params.forEach((value, key) => {
+          if (key === "prev_scp" || key === "cust_params") {
+            try {
+              const nestedParams = new URLSearchParams(value);
+              const nestedObj = {};
+              nestedParams.forEach((nestedValue, nestedKey) => {
+                const isEmpty = !nestedValue;
+                const row = document.createElement("tr");
+                row.innerHTML = `<td class="key">${key}</td>
                                <td class="nested-key">${nestedKey}</td>
-                               <td class="value${isEmpty ? ' highlight' : ''}">${nestedValue || '(empty)'}</td>`;
-              tableBody.appendChild(row);
-              nestedObj[nestedKey] = nestedValue;
-            });
-            parsedData.params[key] = nestedObj;
-          } catch (e) {
-            const isEmpty = !value;
-            const row = document.createElement('tr');
-            row.innerHTML = `<td class="key">${key}</td>
+                               <td class="value${
+                                 isEmpty ? " highlight" : ""
+                               }">${nestedValue || "(empty)"}</td>`;
+                tableBody.appendChild(row);
+                nestedObj[nestedKey] = nestedValue;
+              });
+              parsedData.params[key] = nestedObj;
+            } catch (e) {
+              const isEmpty = !value;
+              const row = document.createElement("tr");
+              row.innerHTML = `<td class="key">${key}</td>
                              <td class="nested-key"></td>
-                             <td class="value${isEmpty ? ' highlight' : ''}">${value || '(empty)'}</td>`;
+                             <td class="value${isEmpty ? " highlight" : ""}">${
+                value || "(empty)"
+              }</td>`;
+              tableBody.appendChild(row);
+              parsedData.params[key] = value;
+            }
+          } else {
+            const isEmpty = !value;
+            const row = document.createElement("tr");
+            row.innerHTML = `<td class="key">${key}</td>
+                           <td class="value${
+                             isEmpty ? " highlight" : ""
+                           }" colspan=2>${value || "(empty)"}</td>`;
             tableBody.appendChild(row);
             parsedData.params[key] = value;
           }
+        });
+
+        const selectedFormat = document.querySelector(
+          'input[name="format"]:checked'
+        ).value;
+        if (selectedFormat === "table") {
+          document.getElementById("adTagTable").style.display = "table";
+          jsonContainer.style.display = "none";
         } else {
-          const isEmpty = !value;
-          const row = document.createElement('tr');
-          row.innerHTML = `<td class="key">${key}</td>
-                           <td class="value${isEmpty ? ' highlight' : ''}" colspan=2>${value || '(empty)'}</td>`;
-          tableBody.appendChild(row);
-          parsedData.params[key] = value;
+          document.getElementById("adTagTable").style.display = "none";
+          jsonContainer.style.display = "block";
+          jsonOutput.innerHTML = formatJSON(parsedData);
         }
-      });
 
-      const selectedFormat = document.querySelector('input[name="format"]:checked').value;
-      if (selectedFormat === 'table') {
-        document.getElementById('adTagTable').style.display = 'table';
-        jsonContainer.style.display = 'none';
-      } else {
-        document.getElementById('adTagTable').style.display = 'none';
-        jsonContainer.style.display = 'block';
-        jsonOutput.innerHTML = formatJSON(parsedData);
+        document.getElementById("copyParsedDataBtn").style.display =
+          "inline-block";
+        document.getElementById("parsedDataContainer").style.display = "block";
       }
 
-      document.getElementById('copyParsedDataBtn').style.display = 'inline-block';
-      document.getElementById('parsedDataContainer').style.display = 'block';
-    }
+      function clearFields() {
+        document.getElementById("adTagInput").value = "";
+        document.getElementById("adTagTable").querySelector("tbody").innerHTML =
+          "";
+        document.getElementById("jsonOutput").innerHTML = "";
+        document.getElementById("adTagTable").style.display = "none";
+        document.getElementById("jsonContainer").style.display = "none";
+        document.getElementById("copyParsedDataBtn").style.display = "none";
+        document.getElementById("notification").style.display = "none";
+        document.getElementById("parsedDataContainer").style.display = "none";
+      }
 
-    function clearFields() {
-      document.getElementById('adTagInput').value = '';
-      document.getElementById('adTagTable').querySelector('tbody').innerHTML = '';
-      document.getElementById('jsonOutput').innerHTML = '';
-      document.getElementById('adTagTable').style.display = 'none';
-      document.getElementById('jsonContainer').style.display = 'none';
-      document.getElementById('copyParsedDataBtn').style.display = 'none';
-      document.getElementById('notification').style.display = 'none';
-      document.getElementById('parsedDataContainer').style.display = 'none';
-    }
+      function onFormatChange() {
+        document.getElementById("adTagTable").querySelector("tbody").innerHTML =
+          "";
+        document.getElementById("jsonOutput").innerHTML = "";
+        document.getElementById("copyParsedDataBtn").style.display = "none";
+        document.getElementById("parsedDataContainer").style.display = "none";
+      }
 
-    function onFormatChange() {
-      document.getElementById('adTagTable').querySelector('tbody').innerHTML = '';
-      document.getElementById('jsonOutput').innerHTML = '';
-      document.getElementById('copyParsedDataBtn').style.display = 'none';
-      document.getElementById('parsedDataContainer').style.display = 'none';
-    }
-
-    function copyParsedData() {
-      const selectedFormat = document.querySelector('input[name="format"]:checked').value;
-      if (selectedFormat === 'table') {
-        const table = document.getElementById('adTagTable');
-        const range = document.createRange();
-        range.selectNode(table);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-
-        try {
-          document.execCommand('copy');
+      function copyParsedData() {
+        const selectedFormat = document.querySelector(
+          'input[name="format"]:checked'
+        ).value;
+        if (selectedFormat === "table") {
+          const table = document.getElementById("adTagTable");
+          const range = document.createRange();
+          range.selectNode(table);
           window.getSelection().removeAllRanges();
-          showNotification();
-        } catch (err) {
-          alert('Failed to copy the result.');
+          window.getSelection().addRange(range);
+
+          try {
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+            showNotification();
+          } catch (err) {
+            alert("Failed to copy the result.");
+          }
+        } else {
+          const jsonStr = JSON.stringify(parsedData, null, 2);
+          navigator.clipboard
+            .writeText(jsonStr)
+            .then(() => showNotification())
+            .catch((err) => alert("Failed to copy JSON result."));
         }
-      } else {
-        const jsonStr = JSON.stringify(parsedData, null, 2);
-        navigator.clipboard.writeText(jsonStr)
-          .then(() => showNotification())
-          .catch(err => alert('Failed to copy JSON result.'));
       }
-    }
 
-    function showNotification() {
-      const notification = document.getElementById('notification');
-      notification.style.display = 'block';
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 2000);
-    }
+      function showNotification() {
+        const notification = document.getElementById("notification");
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 2000);
+      }
 
-    function formatJSON(data) {
-      const jsonString = JSON.stringify(data, null, 2);
-      return jsonString
-        .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
-        .replace(/:\s"([^"]*)"/g, (match, p1) => {
-          return `: <span class="${p1 === '' ? 'json-empty' : 'json-value'}">"${p1 || '(empty)'}"</span>`;
-        })
-        .replace(/:\s(\{)/g, ': <span class="json-nested-value">$1</span>')
-        .replace(/"([^"]+)":\s\{/g, '"<span class="json-nested-key">$1</span>": {');
-    }
-  </script>
-</body>
+      function formatJSON(data) {
+        const jsonString = JSON.stringify(data, null, 2);
+        return jsonString
+          .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+          .replace(/:\s"([^"]*)"/g, (match, p1) => {
+            return `: <span class="${
+              p1 === "" ? "json-empty" : "json-value"
+            }">"${p1 || "(empty)"}"</span>`;
+          })
+          .replace(/:\s(\{)/g, ': <span class="json-nested-value">$1</span>')
+          .replace(
+            /"([^"]+)":\s\{/g,
+            '"<span class="json-nested-key">$1</span>": {'
+          );
+      }
+    </script>
+  </body>
 </html>
