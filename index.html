@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Request URL Parser</title>
     <link rel="icon" type="image/jpeg" href="url-vector-icon.jpg" />
-
     <style>
       body {
         font-family: "Courier New", Courier, monospace;
@@ -27,21 +26,24 @@
       textarea {
         width: calc(100% - 22px);
         padding: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
         border: 1px solid #ccc;
         border-radius: 5px;
-        height: 100px;
-        resize: both;
+        height: 40px;
+        resize: none;
         overflow: auto;
+      }
+      #adTagInputCompare {
+        margin-bottom: 10px;
       }
       .button-group {
         display: flex;
         gap: 10px;
         justify-content: space-between;
         margin-top: 20px;
+        flex-wrap: wrap;
       }
-      .button-group button,
-      .button-group select {
+      .button-group button {
         flex: 1;
         padding: 10px;
         border: none;
@@ -52,7 +54,6 @@
       .button-group .copy-btn {
         background-color: #007bff;
         color: white;
-        flex: 1;
       }
       .button-group .copy-btn.copied {
         background-color: #28a745;
@@ -65,20 +66,16 @@
         background-color: #dc3545;
         color: white;
       }
-      select {
-        background-color: #007bff;
-        color: white;
-        border: none;
-      }
-      select:disabled {
-        background-color: #ddd;
-        cursor: not-allowed;
+      .compare-btn {
+        background-color: #ffc107;
+        color: black;
       }
       table {
         width: 100%;
+        table-layout: fixed;
         border-collapse: collapse;
         margin-top: 20px;
-        display: table;
+        word-break: break-word;
       }
       td,
       th {
@@ -93,18 +90,8 @@
       tr:nth-child(even) {
         background-color: #f2f2f2;
       }
-      .key {
-        width: 10%;
-      }
-      .nested-key {
-        width: 10%;
-      }
-      .value {
-        line-break: anywhere;
-        width: 60%;
-      }
       .highlight {
-        background-color: #ffcccc !important;
+        /* background-color: #ffcccc !important; */
         color: #a70000 !important;
         font-weight: bold;
       }
@@ -119,265 +106,211 @@
         display: none;
         font-size: 16px;
       }
-      .json-container {
-        margin-top: 20px;
-        padding: 20px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        display: none;
-      }
-      .json-key {
-        color: #007bff;
-        font-weight: bold;
-      }
-      .json-value {
-        color: #000;
-      }
-      .json-nested-key {
-        color: #ff5733;
-        font-weight: bold;
-      }
-      .json-nested-value {
-        color: #555;
-      }
-      .json-empty {
-        color: #a70000;
-        font-weight: bold;
-      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Request URL Parser</h1>
-      <label for="adTagInput"
-        >Enter your Request URL or query parameters:</label
-      >
-      <textarea
-        id="adTagInput"
-        placeholder="Paste your Request URL, query parameters, or network request payload..."
-        aria-describedby="adTagInputHelp"
-      ></textarea>
-      <p id="adTagInputHelp">
-        Example: https://example.com?param1=value1&param2=value2
-      </p>
+      <label for="adTagInput">Enter your Request URL:</label>
+      <textarea id="adTagInput" placeholder="Paste your Request URL here..."></textarea>
+      <textarea id="adTagInputCompare" placeholder="Paste second URL to compare..." style="display: none"></textarea>
+      <p>Example: https://example.com?param1=value1&param2=value2</p>
 
       <div class="button-group">
-        <button
-          class="parse-btn"
-          onclick="parseAdTag()"
-          aria-label="Parse the entered URL"
-        >
-          Parse URL
-        </button>
-        <button
-          class="clear-btn"
-          onclick="clearFields()"
-          aria-label="Clear all input and output fields"
-        >
-          Clear
-        </button>
-        <button
-          class="copy-btn"
-          id="copyParsedDataBtn"
-          onclick="copyParsedData()"
-          style="display: none"
-          aria-label="Copy the parsed data"
-        >
+        <button class="parse-btn" onclick="parseAdTag()">Parse URL</button>
+        <button class="compare-btn" id="compareBtn" onclick="handleCompareClick()">Add to Compare URL</button>
+        <button class="clear-btn" onclick="clearFields()">Clear</button>
+        <button class="copy-btn" id="copyParsedDataBtn" onclick="copyParsedData()" style="display: none">
           Copy Parsed Data
         </button>
       </div>
 
-      <fieldset id="formatSelection" style="margin-top: 20px">
-        <legend>Select Output Format</legend>
-        <label>
-          <input
-            type="radio"
-            name="format"
-            id="tableFormat"
-            value="table"
-            checked
-            onclick="onFormatChange()"
-            aria-label="Display parsed data in table format"
-          />
-          Table Format
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="format"
-            id="jsonFormat"
-            value="json"
-            onclick="onFormatChange()"
-            aria-label="Display parsed data in JSON format"
-          />
-          JSON Format
-        </label>
-      </fieldset>
-
       <div id="parsedDataContainer" style="display: none">
-        <table id="adTagTable" aria-label="Parsed URL data in table format">
+        <table id="adTagTable">
+          <thead></thead>
           <tbody></tbody>
         </table>
-        <div class="json-container" id="jsonContainer">
-          <pre
-            id="jsonOutput"
-            style="white-space: pre-wrap; word-wrap: break-word"
-            aria-label="Parsed URL data in JSON format"
-          ></pre>
-        </div>
       </div>
     </div>
 
-    <div id="notification" class="notification" role="alert" aria-live="polite">
-      Result copied successfully!
-    </div>
+    <div id="notification" class="notification">Result copied successfully!</div>
 
     <script>
       let parsedData = {};
 
       function isValidURL(url) {
         try {
-          new URL(url);
-          return true;
-        } catch (e) {
+          const u = new URL(url);
+          return u.protocol === "http:" || u.protocol === "https:";
+        } catch {
           return false;
         }
       }
 
+      function parseQueryParams(url) {
+        const [baseUrl, queryString] = url.split("?");
+        const parsed = { uriStub: baseUrl, params: {} };
+
+        if (queryString) {
+          const params = new URLSearchParams(queryString);
+          params.forEach((value, key) => {
+            try {
+              if ((key === "prev_scp" || key === "cust_params") && value.trim().startsWith("{")) {
+                parsed.params[key] = JSON.parse(value);
+              } else {
+                parsed.params[key] = value;
+              }
+            } catch {
+              parsed.params[key] = value;
+            }
+          });
+        }
+
+        return parsed;
+      }
+
+      function renderNestedRows(key, obj, highlightKeys = []) {
+        const rows = [];
+        for (const subKey in obj) {
+          const val = obj[subKey];
+          const isEmpty = val === "" ? "highlight" : "";
+          const highlight = highlightKeys.includes(subKey) ? "highlight" : isEmpty;
+          rows.push(`<tr><td>${key}</td><td>${subKey}</td><td class="${highlight}">${val || "(empty)"}</td></tr>`);
+        }
+        return rows;
+      }
+
+      function displayTable(data, compareData = null) {
+        const tbody = document.querySelector("#adTagTable tbody");
+        const thead = document.querySelector("#adTagTable thead");
+        tbody.innerHTML = "";
+        thead.innerHTML = compareData
+          ? "<tr><th>Key</th><th>Sub-Key</th><th>Value 1</th><th>Value 2</th></tr>"
+          : "<tr><th>Key</th><th>Sub-Key</th><th>Value</th></tr>";
+
+        if (compareData) {
+          const isSameURL = JSON.stringify(data) === JSON.stringify(compareData);
+
+          tbody.innerHTML += `<tr><td>URI-STUB</td><td></td><td>${data.uriStub}</td><td>${compareData.uriStub}</td></tr>`;
+          const allKeys = new Set([...Object.keys(data.params), ...Object.keys(compareData.params)]);
+          allKeys.forEach((key) => {
+            const val1 = data.params[key];
+            const val2 = compareData.params[key];
+
+            if (typeof val1 === "object" || typeof val2 === "object") {
+              const allSubKeys = new Set([
+                ...Object.keys(val1 || {}),
+                ...Object.keys(val2 || {})
+              ]);
+              allSubKeys.forEach((subKey) => {
+                const subVal1 = val1?.[subKey] ?? "";
+                const subVal2 = val2?.[subKey] ?? "";
+                const highlight = !isSameURL && subVal1 !== subVal2 ? "highlight" : "";
+                tbody.innerHTML += `<tr><td>${key}</td><td>${subKey}</td><td class="${highlight}">${subVal1}</td><td class="${highlight}">${subVal2}</td></tr>`;
+              });
+            } else if (typeof val1 === "string" && val1.includes("=")) {
+              // Parse nested string properties into key-value pairs
+              const nestedParams1 = new URLSearchParams(val1);
+              const nestedParams2 = val2 ? new URLSearchParams(val2) : null;
+              nestedParams1.forEach((nestedVal1, nestedKey) => {
+                const nestedVal2 = nestedParams2?.get(nestedKey) ?? "";
+                const highlight = !isSameURL && nestedVal1 !== nestedVal2 ? "highlight" : "";
+                tbody.innerHTML += `<tr><td>${key}</td><td>${nestedKey}</td><td class="${highlight}">${nestedVal1}</td><td class="${highlight}">${nestedVal2}</td></tr>`;
+              });
+            } else {
+              const highlight = !isSameURL && val1 !== val2 ? "highlight" : "";
+              tbody.innerHTML += `<tr><td>${key}</td><td></td><td class="${highlight}">${val1 ?? ""}</td><td class="${highlight}">${val2 ?? ""}</td></tr>`;
+            }
+          });
+        } else {
+          tbody.innerHTML += `<tr><td>URI-STUB</td><td></td><td>${data.uriStub}</td></tr>`;
+          for (const key in data.params) {
+            const value = data.params[key];
+            if (typeof value === "object" && !Array.isArray(value)) {
+              Object.keys(value).forEach((subKey) => {
+                const subValue = value[subKey];
+                const isEmpty = !subValue ? "highlight" : "";
+                tbody.innerHTML += `<tr><td>${key}</td><td>${subKey}</td><td class="${isEmpty}">${subValue || "(empty)"}</td></tr>`;
+              });
+            } else if (typeof value === "string" && value.includes("=")) {
+              // Parse nested string properties into key-value pairs
+              const nestedParams = new URLSearchParams(value);
+              nestedParams.forEach((nestedVal, nestedKey) => {
+                const isEmpty = !nestedVal ? "highlight" : "";
+                tbody.innerHTML += `<tr><td>${key}</td><td>${nestedKey}</td><td class="${isEmpty}">${nestedVal || "(empty)"}</td></tr>`;
+              });
+            } else {
+              const isEmpty = !value ? "highlight" : "";
+              tbody.innerHTML += `<tr><td>${key}</td><td></td><td class="${isEmpty}">${value || "(empty)"}</td></tr>`;
+            }
+          }
+        }
+
+        document.getElementById("parsedDataContainer").style.display = "block";
+        document.getElementById("adTagTable").style.display = "table";
+        document.getElementById("copyParsedDataBtn").style.display = "inline-block";
+      }
+
       function parseAdTag() {
         const input = document.getElementById("adTagInput").value.trim();
-        const tableBody = document
-          .getElementById("adTagTable")
-          .querySelector("tbody");
-        const jsonOutput = document.getElementById("jsonOutput");
-        const jsonContainer = document.getElementById("jsonContainer");
-        tableBody.innerHTML = "";
-        jsonOutput.innerHTML = "";
-
-        if (!input) {
-          alert("Please enter a Request URL or query parameters.");
+        if (!input || !isValidURL(input)) {
+          alert("Please enter a valid Request URL.");
           return;
         }
+        parsedData = parseQueryParams(input);
+        displayTable(parsedData);
+      }
 
-        if (!isValidURL(input)) {
-          alert(
-            "The entered Request URL is not in a valid format. Please enter a correct URL."
-          );
-          return;
-        }
+      function handleCompareClick() {
+        const compareBox = document.getElementById("adTagInputCompare");
+        const compareBtn = document.getElementById("compareBtn");
 
-        const [baseUrl, queryString] = input.split("?");
-        const uriStubRow = document.createElement("tr");
-        uriStubRow.innerHTML = `<td class="key">URI-STUB</td><td class="value" colspan=2>${baseUrl}</td>`;
-        tableBody.appendChild(uriStubRow);
-
-        parsedData = { uriStub: baseUrl, params: {} };
-
-        if (!queryString) return;
-
-        const params = new URLSearchParams(queryString);
-        params.forEach((value, key) => {
-          if (key === "prev_scp" || key === "cust_params") {
-            try {
-              const nestedParams = new URLSearchParams(value);
-              const nestedObj = {};
-              nestedParams.forEach((nestedValue, nestedKey) => {
-                const isEmpty = !nestedValue;
-                const row = document.createElement("tr");
-                row.innerHTML = `<td class="key">${key}</td>
-                               <td class="nested-key">${nestedKey}</td>
-                               <td class="value${
-                                 isEmpty ? " highlight" : ""
-                               }">${nestedValue || "(empty)"}</td>`;
-                tableBody.appendChild(row);
-                nestedObj[nestedKey] = nestedValue;
-              });
-              parsedData.params[key] = nestedObj;
-            } catch (e) {
-              const isEmpty = !value;
-              const row = document.createElement("tr");
-              row.innerHTML = `<td class="key">${key}</td>
-                             <td class="nested-key"></td>
-                             <td class="value${isEmpty ? " highlight" : ""}">${
-                value || "(empty)"
-              }</td>`;
-              tableBody.appendChild(row);
-              parsedData.params[key] = value;
-            }
-          } else {
-            const isEmpty = !value;
-            const row = document.createElement("tr");
-            row.innerHTML = `<td class="key">${key}</td>
-                           <td class="value${
-                             isEmpty ? " highlight" : ""
-                           }" colspan=2>${value || "(empty)"}</td>`;
-            tableBody.appendChild(row);
-            parsedData.params[key] = value;
-          }
-        });
-
-        const selectedFormat = document.querySelector(
-          'input[name="format"]:checked'
-        ).value;
-        if (selectedFormat === "table") {
-          document.getElementById("adTagTable").style.display = "table";
-          jsonContainer.style.display = "none";
+        if (compareBox.style.display === "none") {
+          // Change button text to "Compare URLs" and show the second input field
+          compareBox.style.display = "block";
+          compareBtn.textContent = "Compare URLs";
         } else {
-          document.getElementById("adTagTable").style.display = "none";
-          jsonContainer.style.display = "block";
-          jsonOutput.innerHTML = formatJSON(parsedData);
-        }
+          // Perform the comparison and display the results
+          const input1 = document.getElementById("adTagInput").value.trim();
+          const input2 = document.getElementById("adTagInputCompare").value.trim();
 
-        document.getElementById("copyParsedDataBtn").style.display =
-          "inline-block";
-        document.getElementById("parsedDataContainer").style.display = "block";
+          if (!isValidURL(input1) || !isValidURL(input2)) {
+            alert("Both fields must contain valid URLs to compare.");
+            return;
+          }
+
+          const data1 = parseQueryParams(input1);
+          const data2 = parseQueryParams(input2);
+          parsedData = { comparison: [data1, data2] };
+          displayTable(data1, data2);
+        }
       }
 
       function clearFields() {
         document.getElementById("adTagInput").value = "";
-        document.getElementById("adTagTable").querySelector("tbody").innerHTML =
-          "";
-        document.getElementById("jsonOutput").innerHTML = "";
-        document.getElementById("adTagTable").style.display = "none";
-        document.getElementById("jsonContainer").style.display = "none";
+        document.getElementById("adTagInputCompare").value = "";
+        document.getElementById("adTagInputCompare").style.display = "none";
+        document.getElementById("compareBtn").textContent = "Add to Compare URL"; // Reset button text
+        document.querySelector("#adTagTable tbody").innerHTML = "";
+        document.querySelector("#adTagTable thead").innerHTML = "";
+        document.getElementById("parsedDataContainer").style.display = "none";
         document.getElementById("copyParsedDataBtn").style.display = "none";
         document.getElementById("notification").style.display = "none";
-        document.getElementById("parsedDataContainer").style.display = "none";
-      }
-
-      function onFormatChange() {
-        document.getElementById("adTagTable").querySelector("tbody").innerHTML =
-          "";
-        document.getElementById("jsonOutput").innerHTML = "";
-        document.getElementById("copyParsedDataBtn").style.display = "none";
-        document.getElementById("parsedDataContainer").style.display = "none";
       }
 
       function copyParsedData() {
-        const selectedFormat = document.querySelector(
-          'input[name="format"]:checked'
-        ).value;
-        if (selectedFormat === "table") {
-          const table = document.getElementById("adTagTable");
-          const range = document.createRange();
-          range.selectNode(table);
-          window.getSelection().removeAllRanges();
-          window.getSelection().addRange(range);
+        const table = document.getElementById("adTagTable");
+        const range = document.createRange();
+        range.selectNode(table);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
 
-          try {
-            document.execCommand("copy");
-            window.getSelection().removeAllRanges();
-            showNotification();
-          } catch (err) {
-            alert("Failed to copy the result.");
-          }
-        } else {
-          const jsonStr = JSON.stringify(parsedData, null, 2);
-          navigator.clipboard
-            .writeText(jsonStr)
-            .then(() => showNotification())
-            .catch((err) => alert("Failed to copy JSON result."));
+        try {
+          document.execCommand("copy");
+          window.getSelection().removeAllRanges();
+          showNotification();
+        } catch {
+          alert("Failed to copy the result.");
         }
       }
 
@@ -387,22 +320,6 @@
         setTimeout(() => {
           notification.style.display = "none";
         }, 2000);
-      }
-
-      function formatJSON(data) {
-        const jsonString = JSON.stringify(data, null, 2);
-        return jsonString
-          .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
-          .replace(/:\s"([^"]*)"/g, (match, p1) => {
-            return `: <span class="${
-              p1 === "" ? "json-empty" : "json-value"
-            }">"${p1 || "(empty)"}"</span>`;
-          })
-          .replace(/:\s(\{)/g, ': <span class="json-nested-value">$1</span>')
-          .replace(
-            /"([^"]+)":\s\{/g,
-            '"<span class="json-nested-key">$1</span>": {'
-          );
       }
     </script>
   </body>
