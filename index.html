@@ -112,15 +112,35 @@
     <div class="container">
       <h1>Request URL Parser</h1>
       <label for="adTagInput">Enter your Request URL:</label>
-      <textarea id="adTagInput" placeholder="Paste your Request URL here..."></textarea>
-      <textarea id="adTagInputCompare" placeholder="Paste second URL to compare..." style="display: none"></textarea>
+      <textarea
+        id="adTagInput"
+        placeholder="Paste your Request URL here..."
+      ></textarea>
+      <textarea
+        id="adTagInputCompare"
+        placeholder="Paste second URL to compare..."
+        style="display: none"
+      ></textarea>
       <p>Example: https://example.com?param1=value1&param2=value2</p>
 
       <div class="button-group">
-        <button class="parse-btn" onclick="parseAdTag()">Parse URL</button>
-        <button class="compare-btn" id="compareBtn" onclick="handleCompareClick()">Add to Compare URL</button>
+        <button class="parse-btn" id="parseBtn" onclick="parseAdTag()">
+          Parse URL
+        </button>
+        <button
+          class="compare-btn"
+          id="compareBtn"
+          onclick="handleCompareClick()"
+        >
+          Add to Compare URL
+        </button>
         <button class="clear-btn" onclick="clearFields()">Clear</button>
-        <button class="copy-btn" id="copyParsedDataBtn" onclick="copyParsedData()" style="display: none">
+        <button
+          class="copy-btn"
+          id="copyParsedDataBtn"
+          onclick="copyParsedData()"
+          style="display: none"
+        >
           Copy Parsed Data
         </button>
       </div>
@@ -133,7 +153,9 @@
       </div>
     </div>
 
-    <div id="notification" class="notification">Result copied successfully!</div>
+    <div id="notification" class="notification">
+      Result copied successfully!
+    </div>
 
     <script>
       let parsedData = {};
@@ -155,7 +177,10 @@
           const params = new URLSearchParams(queryString);
           params.forEach((value, key) => {
             try {
-              if ((key === "prev_scp" || key === "cust_params") && value.trim().startsWith("{")) {
+              if (
+                (key === "prev_scp" || key === "cust_params") &&
+                value.trim().startsWith("{")
+              ) {
                 parsed.params[key] = JSON.parse(value);
               } else {
                 parsed.params[key] = value;
@@ -174,8 +199,14 @@
         for (const subKey in obj) {
           const val = obj[subKey];
           const isEmpty = val === "" ? "highlight" : "";
-          const highlight = highlightKeys.includes(subKey) ? "highlight" : isEmpty;
-          rows.push(`<tr><td>${key}</td><td>${subKey}</td><td class="${highlight}">${val || "(empty)"}</td></tr>`);
+          const highlight = highlightKeys.includes(subKey)
+            ? "highlight"
+            : isEmpty;
+          rows.push(
+            `<tr><td>${key}</td><td>${subKey}</td><td class="${highlight}">${
+              val || "(empty)"
+            }</td></tr>`
+          );
         }
         return rows;
       }
@@ -189,10 +220,14 @@
           : "<tr><th>Key</th><th>Sub-Key</th><th>Value</th></tr>";
 
         if (compareData) {
-          const isSameURL = JSON.stringify(data) === JSON.stringify(compareData);
+          const isSameURL =
+            JSON.stringify(data) === JSON.stringify(compareData);
 
           tbody.innerHTML += `<tr><td>URI-STUB</td><td></td><td>${data.uriStub}</td><td>${compareData.uriStub}</td></tr>`;
-          const allKeys = new Set([...Object.keys(data.params), ...Object.keys(compareData.params)]);
+          const allKeys = new Set([
+            ...Object.keys(data.params),
+            ...Object.keys(compareData.params),
+          ]);
           allKeys.forEach((key) => {
             const val1 = data.params[key];
             const val2 = compareData.params[key];
@@ -200,12 +235,13 @@
             if (typeof val1 === "object" || typeof val2 === "object") {
               const allSubKeys = new Set([
                 ...Object.keys(val1 || {}),
-                ...Object.keys(val2 || {})
+                ...Object.keys(val2 || {}),
               ]);
               allSubKeys.forEach((subKey) => {
                 const subVal1 = val1?.[subKey] ?? "";
                 const subVal2 = val2?.[subKey] ?? "";
-                const highlight = !isSameURL && subVal1 !== subVal2 ? "highlight" : "";
+                const highlight =
+                  !isSameURL && subVal1 !== subVal2 ? "highlight" : "";
                 tbody.innerHTML += `<tr><td>${key}</td><td>${subKey}</td><td class="${highlight}">${subVal1}</td><td class="${highlight}">${subVal2}</td></tr>`;
               });
             } else if (typeof val1 === "string" && val1.includes("=")) {
@@ -214,12 +250,15 @@
               const nestedParams2 = val2 ? new URLSearchParams(val2) : null;
               nestedParams1.forEach((nestedVal1, nestedKey) => {
                 const nestedVal2 = nestedParams2?.get(nestedKey) ?? "";
-                const highlight = !isSameURL && nestedVal1 !== nestedVal2 ? "highlight" : "";
+                const highlight =
+                  !isSameURL && nestedVal1 !== nestedVal2 ? "highlight" : "";
                 tbody.innerHTML += `<tr><td>${key}</td><td>${nestedKey}</td><td class="${highlight}">${nestedVal1}</td><td class="${highlight}">${nestedVal2}</td></tr>`;
               });
             } else {
               const highlight = !isSameURL && val1 !== val2 ? "highlight" : "";
-              tbody.innerHTML += `<tr><td>${key}</td><td></td><td class="${highlight}">${val1 ?? ""}</td><td class="${highlight}">${val2 ?? ""}</td></tr>`;
+              tbody.innerHTML += `<tr><td>${key}</td><td></td><td class="${highlight}">${
+                val1 ?? ""
+              }</td><td class="${highlight}">${val2 ?? ""}</td></tr>`;
             }
           });
         } else {
@@ -230,25 +269,32 @@
               Object.keys(value).forEach((subKey) => {
                 const subValue = value[subKey];
                 const isEmpty = !subValue ? "highlight" : "";
-                tbody.innerHTML += `<tr><td>${key}</td><td>${subKey}</td><td class="${isEmpty}">${subValue || "(empty)"}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${key}</td><td>${subKey}</td><td class="${isEmpty}">${
+                  subValue || "(empty)"
+                }</td></tr>`;
               });
             } else if (typeof value === "string" && value.includes("=")) {
               // Parse nested string properties into key-value pairs
               const nestedParams = new URLSearchParams(value);
               nestedParams.forEach((nestedVal, nestedKey) => {
                 const isEmpty = !nestedVal ? "highlight" : "";
-                tbody.innerHTML += `<tr><td>${key}</td><td>${nestedKey}</td><td class="${isEmpty}">${nestedVal || "(empty)"}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${key}</td><td>${nestedKey}</td><td class="${isEmpty}">${
+                  nestedVal || "(empty)"
+                }</td></tr>`;
               });
             } else {
               const isEmpty = !value ? "highlight" : "";
-              tbody.innerHTML += `<tr><td>${key}</td><td></td><td class="${isEmpty}">${value || "(empty)"}</td></tr>`;
+              tbody.innerHTML += `<tr><td>${key}</td><td></td><td class="${isEmpty}">${
+                value || "(empty)"
+              }</td></tr>`;
             }
           }
         }
 
         document.getElementById("parsedDataContainer").style.display = "block";
         document.getElementById("adTagTable").style.display = "table";
-        document.getElementById("copyParsedDataBtn").style.display = "inline-block";
+        document.getElementById("copyParsedDataBtn").style.display =
+          "inline-block";
       }
 
       function parseAdTag() {
@@ -264,15 +310,19 @@
       function handleCompareClick() {
         const compareBox = document.getElementById("adTagInputCompare");
         const compareBtn = document.getElementById("compareBtn");
+        const parseBtn = document.getElementById("parseBtn");
 
         if (compareBox.style.display === "none") {
-          // Change button text to "Compare URLs" and show the second input field
+          // Hide Parse URL button and show the second input field
           compareBox.style.display = "block";
           compareBtn.textContent = "Compare URLs";
+          parseBtn.style.display = "none";
         } else {
           // Perform the comparison and display the results
           const input1 = document.getElementById("adTagInput").value.trim();
-          const input2 = document.getElementById("adTagInputCompare").value.trim();
+          const input2 = document
+            .getElementById("adTagInputCompare")
+            .value.trim();
 
           if (!isValidURL(input1) || !isValidURL(input2)) {
             alert("Both fields must contain valid URLs to compare.");
@@ -290,7 +340,9 @@
         document.getElementById("adTagInput").value = "";
         document.getElementById("adTagInputCompare").value = "";
         document.getElementById("adTagInputCompare").style.display = "none";
-        document.getElementById("compareBtn").textContent = "Add to Compare URL"; // Reset button text
+        document.getElementById("compareBtn").textContent =
+          "Add to Compare URL"; // Reset button text
+        document.getElementById("parseBtn").style.display = "inline-block"; // Show Parse URL button
         document.querySelector("#adTagTable tbody").innerHTML = "";
         document.querySelector("#adTagTable thead").innerHTML = "";
         document.getElementById("parsedDataContainer").style.display = "none";
